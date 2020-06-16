@@ -4,17 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class AdminController extends Controller
+class AdminController extends CrudController
 {
     
     public function create(Request $request, $modelName){
     	switch ($modelName) {
         	case 'Chapter':
-        		$validation = ['name'=>'required', 'surah'=>'required|integer|min:1|max:99'];
+        		$validation = ['name'=>'required', 'surahs'=>'required|integer|min:1|max:99'];
         		break;
 
     		case 'Surah':
     			$validation = ['chapter_id' => 'required|integer|exists:chapters,id', 'name' => 'required', 'aayahs' => 'required|integer|min:3|max:999', 'rukuh' => 'required|integer|min:1|max:25', 'revealed_at' => 'required|in:Mecca,Medina'];
+                break;
 			
 			case 'Aayah':
         		$validation = ['chapter_id' => 'required|integer|exists:chapters,id', 'surah_id' => 'required|integer|exists:surahs,id', 'name' => 'required'];
