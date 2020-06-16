@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class AdminController extends CrudController
 {
-    
+    // CREATING THE RESOURCE ACCORDINGLY
     public function create(Request $request, $modelName){
     	switch ($modelName) {
         	case 'Chapter':
@@ -36,16 +36,19 @@ class AdminController extends CrudController
         return $this->store('\App\\'.$modelName, $request, $validation);
     }
 
+    // UPDATING SPECIFIC RESOURCES
     public function modify(Request $request, $modelName){
     	$table = strtolower($modelName).'s';
     	$validation = ['id' => "required|integer|exists:$table,id"];
         return $this->update('\App\\'.$modelName, $request, $validation);
     }
 
+    // RECYCLING SPECIFIC RESOURCE
     public function remove(Request $request, $modelName){
     	return $this->recycleBin('\App\\'.$modelName, $request);
     }
 
+    // RESTORING FROM RECYCLE/TRASH
     public function restore(Request $request, $modelName){
     	$restorableModel = ['Aayah'];
     	if(in_array($modelName, $restorableModel))
