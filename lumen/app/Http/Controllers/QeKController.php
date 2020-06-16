@@ -49,6 +49,7 @@ class QeKController extends Controller
             // CHAPTER INTIAL DETAILS
             $quran[$key]['id'] = $value['id'];
             $quran[$key]['name'] = $value['name'];
+            // BIND CHAPTER TRANSLATION 
             $quran[$key]['translations'] = $this->bindTranslations($value, 'chapter', $value['id']);
 
             // BIND SURAH WITH TRANSLATION
