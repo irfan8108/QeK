@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 class QeKController extends Controller
 {
     private $languages = [];
+    private $quran = [];
 
     public function __construct(){
         // SET THE LANGUAGES
@@ -23,53 +24,62 @@ class QeKController extends Controller
     }
 
     // GET THE QURAN ACCORDING TO REQUEST / TYPE
-    public function quran(Request $request, $type = null){
-    	switch ($type) {
-    		case 'type':
-    			$data = [];
-    			break;
-    		
-    		default:
-    			// THE COMPLETE QURAN
-    			$data = $this->fullQuran();
-    			break;
-    	}
-    	return response(['status' => true, 'data' => $data]);
+    public function quran(){
+        $data = $this->fullQuran();
+        return response(['status' => true, 'data' => $data]);
     }
 	
+    // GET THE REQUEST QURAN CHAPTER    
+    public function specificChapter($chapter_id){
+        if(!is_null($chapter_id)){
+            $data = \App\Chapter::whereStatus(true)->where('id', $chapter_id)->with('surah')->with('aayah')->with('chapterTranslation', 'surahTranslation', 'aayahTranslation')->get();
+            if(!empty($data)){
+                $this->quran = $this->serealizeData($data);
+            }
+        }
+        return $this->quran;   
+    }
+
     // GET THE COMPLETE QURAN
     protected function fullQuran(){
 		
-        // COMPLETE QURAN DATA
+        // FETCH COMPLETE QURAN DATA
         $data = \App\Chapter::whereStatus(true)->with('surah')->with('aayah')->with('chapterTranslation', 'surahTranslation', 'aayahTranslation')->get();
 
-        $quran['total_chapters'] = count($data);
+        // SEREALIZE & BIND THE DATA
+        if(!empty($data)){
+            $this->quran = $this->serealizeData($data);
+            $this->quran['total_chapters'] = count($data);
+        }
 
+		return $this->quran;
+    }
+
+    private function serealizeData($data){
         foreach ($data as $key => $value) {
             // CHAPTER INTIAL DETAILS
-            $quran[$key]['id'] = $value['id'];
-            $quran[$key]['name'] = $value['name'];
+            $this->quran[$key]['id'] = $value['id'];
+            $this->quran[$key]['name'] = $value['name'];
             // BIND CHAPTER TRANSLATION 
-            $quran[$key]['translations'] = $this->bindTranslations($value, 'chapter', $value['id']);
+            $this->quran[$key]['translations'] = $this->bindTranslations($value, 'chapter', $value['id']);
 
             // BIND SURAH WITH TRANSLATION
             foreach ($value['surah'] as $s_key => $s_value) {
                 // SURAH INITIAL DETAILS
-                $quran[$key]['surahs'][$s_key] = ['id' => $s_value['id'], 'name' => $s_value['name'], 'rukus' => $s_value['ruku']];
+                $this->quran[$key]['surahs'][$s_key] = ['id' => $s_value['id'], 'name' => $s_value['name'], 'rukus' => $s_value['ruku']];
                 // SURAH TRANSLATIONS
-                $quran[$key]['surahs'][$s_key]['translation'] = $this->bindTranslations($value->toArray(), 'surah', $s_value['id']);
+                $this->quran[$key]['surahs'][$s_key]['translation'] = $this->bindTranslations($value->toArray(), 'surah', $s_value['id']);
             }
 
             // BIND AAYAH WITH TRANSLATION
             foreach ($value['aayah'] as $a_key => $a_value) {
                 // AAYAH INITIAL DETAILS
-                $quran[$key]['surahs'][$s_key]['aayahs'][$a_key] = ['id' =>$a_value['id'], 'name' => $a_value['name'], 'sajda' => $s_value['has_sajdah'] ? 'Yes' : 'No'];
+                $this->quran[$key]['surahs'][$s_key]['aayahs'][$a_key] = ['id' =>$a_value['id'], 'name' => $a_value['name'], 'sajda' => $s_value['has_sajdah'] ? 'Yes' : 'No'];
                 // AAYAH TRANSLATIONS
-                $quran[$key]['surahs'][$s_key]['aayahs'][$a_key]['translation'] = $this->bindTranslations($value->toArray(), 'aayah', $a_value['id']);
+                $this->quran[$key]['surahs'][$s_key]['aayahs'][$a_key]['translation'] = $this->bindTranslations($value->toArray(), 'aayah', $a_value['id']);
             }
         }
-
-		return $quran;
+        return $this->quran;
     }
 
     // BIND THE QURAN TRANSLATIONS
